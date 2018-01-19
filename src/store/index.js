@@ -3,12 +3,33 @@ import Vuex from 'vuex';
 
 import json from './products.json';
 
+const debug = process.env.NODE_ENV !== 'production';
+
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
+  strict: debug,
+
   state: {
     isLoading: false,
-    results: {}
+    cart: [],
+    products: {}
+  },
+
+  getters: {
+    allProducts: state => state.products, // would need action/mutation if data fetched async
+    getNumberOfProducts: state => (state.products) ? state.products.length : 0,
+    cartProducts: state => {
+      return state.cart.map(({ id, quantity }) => {
+        const product = state.products.find(p => p.id === id)
+
+        return {
+          name: product.name,
+          price: product.price,
+          quantity
+        }
+      })
+    }
   },
 
   mutations: {
@@ -17,17 +38,31 @@ const store = new Vuex.Store({
       state.isLoading = loading;
     },
 
-    SET_SEARCH_RESULTS: (state, results) => {
+    SET_PRODUCTS: (state, products) => {
       /* eslint-disable no-param-reassign */
-      state.results = results;
+      state.products = products;
+    },
+
+    ADD_TO_CART: (state, { id }) => {
+      const record = state.cart.find(p => p.id === id);
+
+      if (!record) {
+        state.cart.push({
+          id,
+          quantity: 1
+        });
+      } else {
+        record.quantity++;
+      }
     }
+
   },
 
   actions: {
-    FETCH_RESULTS: ({ commit, state }, query) => {
-      // console.log(`action FETCH_RESULTS: query = ${query}`);
+    FETCH_PRODUCTS: ({ commit, state }, query) => {
+      // console.log(`action FETCH_PRODUCTS: query = ${query}`);
 
-      commit('SET_SEARCH_QUERY', query);
+      // commit('SET_SEARCH_QUERY', query);
       commit('SET_IS_LOADING', true);
 
       if (query) {
@@ -38,9 +73,9 @@ const store = new Vuex.Store({
           }, delay);
         });
 
-        return p.then((result) => {
+        return p.then((products) => {
           // console.log('Fetch Promise OK! mutating state...');
-          commit('SET_SEARCH_RESULTS', result);
+          commit('SET_PRODUCTS', products);
           commit('SET_IS_LOADING', false);
 
           // if (result === '') {
@@ -51,6 +86,12 @@ const store = new Vuex.Store({
 
       commit('SET_IS_LOADING', false);
       return Promise.reject();
+    },
+
+    ADD_TO_CART: ({ commit }, product) => {
+      commit('ADD_TO_CART', {
+        id: product.id
+      });
     }
   }
 });

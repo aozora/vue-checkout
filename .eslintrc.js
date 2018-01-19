@@ -49,6 +49,10 @@ module.exports = {
     'max-len': [1, 200, 2, { 'ignoreComments': true }],
     'linebreak-style': 0,
     'comma-dangle': [2, 'never'],
-    'no-unused-vars': [1, { 'vars': 'local', 'args': 'none' }]
+    'no-unused-vars': [1, { 'vars': 'local', 'args': 'none' }],
+    'indent': ["error", 2],
+
+    // VUE
+    'vue/script-indent': 0 // ["error", 2, { "baseIndent": 1 }]
   }
-}
+};
